@@ -1,6 +1,7 @@
 import type { TransactionCall } from "./types.js";
 
-/** JSON-RPC request helper */
+const GAS_PRICE_ORACLE = "0x420000000000000000000000000000000000000F";
+
 async function rpcCall<T>(
   url: string,
   method: string,
@@ -37,7 +38,6 @@ async function rpcCall<T>(
   return json.result;
 }
 
-/** Call eth_estimateGas */
 export async function ethEstimateGas(
   rpcUrl: string,
   tx: TransactionCall
@@ -45,7 +45,6 @@ export async function ethEstimateGas(
   return rpcCall<string>(rpcUrl, "eth_estimateGas", [tx]);
 }
 
-/** Call eth_gasPrice */
 export async function ethGasPrice(rpcUrl: string): Promise<string> {
   return rpcCall<string>(rpcUrl, "eth_gasPrice", []);
 }
@@ -59,7 +58,6 @@ export async function getL1FeeUpperBound(
   rpcUrl: string,
   txSizeBytes: number
 ): Promise<string> {
-  const GAS_PRICE_ORACLE = "0x420000000000000000000000000000000000000F";
   const selector = "0xd22a6484";
   const sizeHex = txSizeBytes.toString(16).padStart(64, "0");
 
@@ -74,7 +72,6 @@ export async function getL1FeeUpperBound(
  * Selector: 0x519b4bd3
  */
 export async function getL1BaseFee(rpcUrl: string): Promise<string> {
-  const GAS_PRICE_ORACLE = "0x420000000000000000000000000000000000000F";
   return rpcCall<string>(rpcUrl, "eth_call", [
     { to: GAS_PRICE_ORACLE, data: "0x519b4bd3" },
     "latest",

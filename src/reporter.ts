@@ -11,7 +11,7 @@ const BLUE = "\x1b[34m";
 const CYAN = "\x1b[36m";
 const WHITE = "\x1b[37m";
 
-function line(label: string, value: string, color = WHITE): string {
+function formatRow(label: string, value: string, color = WHITE): string {
   return `  ${DIM}${label.padEnd(24)}${RESET}${color}${value}${RESET}`;
 }
 
@@ -25,17 +25,17 @@ export function formatEstimate(est: GasEstimate, label?: string): string {
   }
 
   lines.push(`${BOLD}${WHITE}  Base (OP Stack L2)${RESET}`);
-  lines.push(line("L2 execution gas", est.l2Gas.toLocaleString(), CYAN));
-  lines.push(line("L2 gas price", `${weiToGwei(est.l2GasPrice)} gwei`, CYAN));
-  lines.push(line("L2 execution fee", `${weiToEth(est.l2Fee)} ETH`, DIM));
-  lines.push(line("L1 data fee", `${weiToEth(est.l1DataFee)} ETH`, DIM));
+  lines.push(formatRow("L2 execution gas", est.l2Gas.toLocaleString(), CYAN));
+  lines.push(formatRow("L2 gas price", `${weiToGwei(est.l2GasPrice)} gwei`, CYAN));
+  lines.push(formatRow("L2 execution fee", `${weiToEth(est.l2Fee)} ETH`, DIM));
+  lines.push(formatRow("L1 data fee", `${weiToEth(est.l1DataFee)} ETH`, DIM));
   if (est.l1BaseFee !== null) {
-    lines.push(line("L1 base fee", `${weiToGwei(est.l1BaseFee)} gwei`, DIM));
+    lines.push(formatRow("L1 base fee", `${weiToGwei(est.l1BaseFee)} gwei`, DIM));
   }
   lines.push("");
-  lines.push(line("Estimated cost", `${est.estimatedCostEth} ETH`, GREEN));
+  lines.push(formatRow("Estimated cost", `${est.estimatedCostEth} ETH`, GREEN));
   if (est.estimatedCostUsd) {
-    lines.push(line("", est.estimatedCostUsd, GREEN));
+    lines.push(formatRow("", est.estimatedCostUsd, GREEN));
   }
 
   return lines.join("\n");
@@ -52,24 +52,24 @@ export function formatComparison(cmp: GasComparison, label?: string): string {
 
   // Base section
   lines.push(`${BOLD}${WHITE}  Base (OP Stack L2)${RESET}`);
-  lines.push(line("L2 execution gas", cmp.base.l2Gas.toLocaleString(), CYAN));
-  lines.push(line("L2 gas price", `${weiToGwei(cmp.base.l2GasPrice)} gwei`, CYAN));
-  lines.push(line("L2 execution fee", `${weiToEth(cmp.base.l2Fee)} ETH`, DIM));
-  lines.push(line("L1 data fee", `${weiToEth(cmp.base.l1DataFee)} ETH`, DIM));
-  lines.push(line("Estimated cost", `${cmp.base.estimatedCostEth} ETH`, GREEN));
+  lines.push(formatRow("L2 execution gas", cmp.base.l2Gas.toLocaleString(), CYAN));
+  lines.push(formatRow("L2 gas price", `${weiToGwei(cmp.base.l2GasPrice)} gwei`, CYAN));
+  lines.push(formatRow("L2 execution fee", `${weiToEth(cmp.base.l2Fee)} ETH`, DIM));
+  lines.push(formatRow("L1 data fee", `${weiToEth(cmp.base.l1DataFee)} ETH`, DIM));
+  lines.push(formatRow("Estimated cost", `${cmp.base.estimatedCostEth} ETH`, GREEN));
   if (cmp.base.estimatedCostUsd) {
-    lines.push(line("", cmp.base.estimatedCostUsd, GREEN));
+    lines.push(formatRow("", cmp.base.estimatedCostUsd, GREEN));
   }
 
   // Ethereum section
   if (cmp.ethereum) {
     lines.push("");
     lines.push(`${BOLD}${WHITE}  Ethereum L1${RESET}`);
-    lines.push(line("Gas estimate", cmp.ethereum.gasEstimate.toLocaleString(), CYAN));
-    lines.push(line("Gas price", `${weiToGwei(cmp.ethereum.gasPrice)} gwei`, CYAN));
-    lines.push(line("Estimated cost", `${cmp.ethereum.estimatedCostEth} ETH`, YELLOW));
+    lines.push(formatRow("Gas estimate", cmp.ethereum.gasEstimate.toLocaleString(), CYAN));
+    lines.push(formatRow("Gas price", `${weiToGwei(cmp.ethereum.gasPrice)} gwei`, CYAN));
+    lines.push(formatRow("Estimated cost", `${cmp.ethereum.estimatedCostEth} ETH`, YELLOW));
     if (cmp.ethereum.estimatedCostUsd) {
-      lines.push(line("", cmp.ethereum.estimatedCostUsd, YELLOW));
+      lines.push(formatRow("", cmp.ethereum.estimatedCostUsd, YELLOW));
     }
   }
 

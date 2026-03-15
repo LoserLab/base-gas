@@ -11,7 +11,6 @@ import {
   getL1BaseFee,
 } from "./rpc.js";
 
-/** Format wei to ETH string with 8 decimal places */
 export function weiToEth(wei: bigint): string {
   const eth = Number(wei) / 1e18;
   if (eth === 0) return "0.00000000";
@@ -19,7 +18,6 @@ export function weiToEth(wei: bigint): string {
   return eth.toFixed(8);
 }
 
-/** Format ETH to USD string */
 export function ethToUsd(ethStr: string, ethPrice: number): string {
   const eth = parseFloat(ethStr);
   if (eth === 0) return "$0.00";
@@ -28,7 +26,6 @@ export function ethToUsd(ethStr: string, ethPrice: number): string {
   return `$${usd.toFixed(2)}`;
 }
 
-/** Format gwei */
 export function weiToGwei(wei: bigint): string {
   const gwei = Number(wei) / 1e9;
   if (gwei < 0.001) return "<0.001";
@@ -113,11 +110,9 @@ export async function compareGas(
 
       ethereum = { gasEstimate, gasPrice, estimatedCostEth, estimatedCostUsd };
 
-      const ethCost = gasEstimate * gasPrice;
-
-      if (ethCost > 0n) {
-        const saved = ethCost - baseEstimate.totalFee;
-        const pct = (Number(saved) / Number(ethCost)) * 100;
+      if (totalCostWei > 0n) {
+        const saved = totalCostWei - baseEstimate.totalFee;
+        const pct = (Number(saved) / Number(totalCostWei)) * 100;
         savings = {
           percentage: `${pct.toFixed(1)}%`,
           absoluteEth: weiToEth(saved > 0n ? saved : -saved),
