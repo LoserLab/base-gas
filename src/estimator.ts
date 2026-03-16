@@ -40,8 +40,9 @@ function estimateTxSize(tx: TransactionCall): number {
   // Base overhead: 68 bytes (nonce, gas, to, value, v, r, s fields)
   let size = 68;
   if (tx.data) {
-    // Remove 0x prefix, each 2 hex chars = 1 byte
-    const dataBytes = (tx.data.length - 2) / 2;
+    // Normalize: remove 0x prefix if present, each 2 hex chars = 1 byte
+    const normalizedData = tx.data.startsWith('0x') ? tx.data.slice(2) : tx.data;
+    const dataBytes = normalizedData.length / 2;
     size += dataBytes;
   }
   return Math.max(size, 100); // Minimum 100 bytes (Fjord minTransactionSize)
@@ -67,61 +68,39 @@ export async function estimateGas(
   const totalFee = l2Fee + l1DataFee;
 
   const estimatedCostEth = weiToEth(totalFee);
-  const estimatedCostUsd = config.ethPriceUsd
-    ? ethToUsd(estimatedCostEth, config.ethPriceUsd)
-    : null;
+  const estimatedCostUsd = ethToUsd(estimatedCostEth, config.ethPrice);
 
   return {
     l2Gas,
     l2GasPrice,
     l2Fee,
     l1DataFee,
+    l1BaseFee,
     totalFee,
     estimatedCostEth,
     estimatedCostUsd,
-    l1BaseFee,
   };
 }
 
-/** Compare gas costs between Base and Ethereum */
+/** Compare gas costs between two transactions */
 export async function compareGas(
-  tx: TransactionCall,
+  tx1: TransactionCall,
+  tx2: TransactionCall,
   config: RpcConfig
 ): Promise<GasComparison> {
-  const baseEstimate = await estimateGas(tx, config);
+  const [estimate1, estimate2] = await Promise.all([
+    estimateGas(tx1, config),
+    estimateGas(tx2, config),
+  ]);
 
-  let ethereum: GasComparison["ethereum"] = null;
-  let savings: GasComparison["savings"] = null;
+  const diff = estimate2.totalFee - estimate1.totalFee;
+  const percentDiff = Number(diff) / Number(estimate1.totalFee) * 100;
 
-  if (config.ethereumRpc) {
-    try {
-      const [ethGasHex, ethPriceHex] = await Promise.all([
-        ethEstimateGas(config.ethereumRpc, tx),
-        ethGasPrice(config.ethereumRpc),
-      ]);
-
-      const gasEstimate = BigInt(ethGasHex);
-      const gasPrice = BigInt(ethPriceHex);
-      const totalCostWei = gasEstimate * gasPrice;
-      const estimatedCostEth = weiToEth(totalCostWei);
-      const estimatedCostUsd = config.ethPriceUsd
-        ? ethToUsd(estimatedCostEth, config.ethPriceUsd)
-        : null;
-
-      ethereum = { gasEstimate, gasPrice, estimatedCostEth, estimatedCostUsd };
-
-      if (totalCostWei > 0n) {
-        const saved = totalCostWei - baseEstimate.totalFee;
-        const pct = (Number(saved) / Number(totalCostWei)) * 100;
-        savings = {
-          percentage: `${pct.toFixed(1)}%`,
-          absoluteEth: weiToEth(saved > 0n ? saved : -saved),
-        };
-      }
-    } catch {
-      // Ethereum estimation failed
-    }
-  }
-
-  return { base: baseEstimate, ethereum, savings };
+  return {
+    tx1: estimate1,
+    tx2: estimate2,
+    difference: diff,
+    percentDifference: percentDiff,
+    cheaper: diff < 0 ? 2 : 1,
+  };
 }
